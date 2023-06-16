@@ -1,0 +1,274 @@
+<template>
+    <div class="card mb-8">
+      <!-- <div class="card-header border-0 pt-6"></div> -->
+      <div class="card-body ">
+        <div class="row">
+          <div class="col-md-3">
+            <Field
+                type="text"
+                class="form-control form-control-solid"
+                name="firstName"
+                v-model="template_name" 
+                placeholder="البحث ب اسم النموذج"
+              />
+          </div>
+          <div class="col-md-3">
+            <Field
+                type="text"
+                class="form-control form-control-solid"
+                name="firstName"
+                v-model="unit_number" 
+                placeholder="البحث برقم الوحدة"
+              />
+          </div>
+          <div class="col-md-3">
+            <Field
+                type="text"
+                class="form-control form-control-solid"
+                name="firstName"
+                v-model="client_name" 
+                placeholder="البحث باسم المفتش"
+              />
+          </div>
+          <div class="col-md-3 text-center">
+            <button class="btn btn-primary" @click="searchresults">بحث</button>
+          </div>
+        </div>
+      </div> 
+    </div>
+    <div class="card">
+      <div class="card-body pt-6">
+        <Datatable
+           @on-sort="sort"
+          :data="items"
+          :header="tableHeader"
+          :enable-items-per-page-dropdown="true"
+        >
+        <template v-slot:Template_Title="{ row: customer }">
+            {{ customer.Template_Title}}
+          </template>
+          <template v-slot:Template_Detail="{ row: customer }">
+            {{ customer.Template_Detail}}
+          </template>
+          <template v-slot:unit_number="{ row: customer }">
+              {{ customer.unit_number }}
+          </template>
+          <template v-slot:nationality="{ row: customer }">
+              {{ customer.nationality }}
+          </template>
+          <template v-slot:pilgrims="{ row: customer }">
+              {{ customer.pilgrims }}
+          </template>
+          <template v-slot:SuccessPercentage="{ row: customer }">
+              {{ customer.SuccessPercentage }}
+          </template>
+          <template v-slot:FailedPercentage="{ row: customer }">
+              {{ customer.FailedPercentage }}
+          </template>
+          <template v-slot:actions="{ row: customer }">
+            <button
+            @click="gotopage(customer.answer_id)"
+            class="btn btn-sm btn-light btn-active-light-primary"
+            >تفاصيل
+          </button>
+          </template>
+          <template v-slot:print="{ row: customer }">
+            <button
+          @click="gotoprint(customer.answer_id)"
+            class="btn btn-sm btn-light btn-active-light-primary"
+            >طباعة
+          </button>
+          </template>
+        </Datatable>
+      </div>
+    </div>
+  
+  </template>
+  
+  <script lang="ts">
+  import { defineComponent, ref, onMounted } from "vue";
+  import Datatable from "@/components/kt-datatable/KTDataTable.vue";
+  import Dropdown3 from "@/components/dropdown/Dropdown3.vue";
+  import type { Sort } from "@/components/kt-datatable//table-partials/models";
+  import ApiService from "@/core/services/ApiService";
+  import customers from "@/core/data/customers";
+  import type { ICustomer } from "@/core/data/customers";
+  import { adminRoot } from "@/components/constants/config";
+  import router from "@/router";
+  import { ErrorMessage, Field, Form as VForm } from "vee-validate";
+  import arraySort from "array-sort";
+  //  interface surveydata{
+  //     answers_count: number;
+  // category : string;
+  // date: string;
+  // detail: string;
+  // id:number;
+  // questions: [];
+  // title: string;
+  //  }
+  
+  export default defineComponent({
+    name: "unitsstatusreport",
+    props:['t_id', 'text'],
+    components: {
+      Datatable,
+      Field,
+    },
+    setup(props) {
+      console.log('props', props);
+        const tableHeader = ref([
+        {
+          columnName:  "النموذج",
+          columnLabel: 'Template_Title',
+          sortEnabled: true,
+          columnWidth: 150,
+        },
+        {
+          columnName: "تفاصيل النموذج",
+          columnLabel: 'Template_Detail',  
+          sortEnabled: true,
+          columnWidth: 150,
+        },
+        {
+          columnName:  "رقم الوحدة ",
+          columnLabel: 'unit_number', 
+          sortEnabled: true,
+          columnWidth: 150,
+        },
+        {
+          columnName: "الجنسية ",
+          columnLabel: 'nationality',
+          sortEnabled: true,
+          columnWidth:150,
+        },
+        {
+          columnName: "عدد الحجاج",
+          columnLabel: 'pilgrims',
+          sortEnabled: true,
+          columnWidth: 150,
+        },
+        {
+          columnName: "نسبة النجاح",
+          columnLabel: 'SuccessPercentage', 
+          sortEnabled: true,
+          columnWidth:150,
+        },
+        {
+          columnName:  'نسبة الخطا',
+          columnLabel: 'FailedPercentage',
+          sortEnabled: true,
+          columnWidth: 150,
+        },
+        {
+          columnName: "الحدث",
+          columnLabel: 'actions', 
+          sortEnabled: true,
+          columnWidth: 150,
+        },
+        {
+          columnName:  "الطباعة ",
+          columnLabel: "print",
+          sortEnabled: true,
+          columnWidth: 150,
+        },
+        
+      ]);
+      const tableData = ref<Array<ICustomer>>(customers);
+    
+      const selectedIds = ref<Array<number>>([]);
+      const title=ref<String>('');
+        const detail=ref<String>('');
+      const items = ref<Array<string>>([]);
+        const currentPage=ref(1);
+        const totalRows=ref(0);
+        const perPage = ref(0);
+        const sortDesc=ref<boolean>(true);
+        const  client_name=ref<String>('');
+        const unit_number=ref<String>('');
+        const  template_name=ref<String>('');
+  
+         
+        // const apiBase=ref(`${setHeaderAuth()}/units_status`);
+        onMounted(() => {
+          console.log("my prop", props);
+          if(props.text=="company")
+        {
+          ApiService.get(`companyForms/${props.t_id}?page=${currentPage.value}&sortDesc=${sortDesc.value}`)
+       .then(({ data }) => {
+           items.value=data.data;
+           totalRows.value = data.Count
+            perPage.value = 15
+      
+        }); 
+        }
+        else if (props.text==="template")
+        {
+          ApiService.get(`templateForms/${props.t_id}?page=${currentPage.value}&sortDesc=${sortDesc.value}`).then(({ data }) =>
+        {
+           items.value=data.data;
+            totalRows.value = data.Count
+            perPage.value = 15
+        })
+  
+        }
+        else
+        {
+          ApiService.get(`units_status?page=${currentPage.value}&sortDesc=${sortDesc.value}`).then(({ data }) =>{
+          items.value=data.data;
+           totalRows.value = data.Count
+            perPage.value = 15
+        })
+  
+        }
+         
+         
+        });
+  
+        const searchresults = () =>{
+          ApiService.get(`units_status?page=${currentPage.value}&sortDesc=${sortDesc.value}&template_name=${template_name.value}&client_name=${client_name.value}&unit_number=${unit_number.value}`).then((data)=>
+        {
+          items.value=data.data;
+           totalRows.value = data.data.Count
+         perPage.value = 15
+        })
+        }
+      
+        const sort = (sort: Sort) => {
+        const reverse: boolean = sort.order === "asc";
+        if (sort.label) {
+          arraySort(tableData.value, sort.label, { reverse });
+        }
+      };
+  
+        const gotopage=(answer_id)=>
+         {
+            router.push({ name: 'success',params:{id:answer_id}});
+         }
+         const getimage = (e) =>
+         {
+  
+         }
+         const gotoprint = (answer_id) =>
+         {
+         window.open(`https://forms.innovativeideasbox.com/API/api/print/${answer_id}`, '_blank');
+         }
+  
+      return {
+        items,
+        tableHeader,
+        selectedIds,
+        title,
+        detail,
+        tableData,
+        gotopage,
+        gotoprint,
+        client_name,
+        unit_number,
+        template_name,
+        searchresults,
+        sort
+      };
+    },
+  });
+  </script>
+  
