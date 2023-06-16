@@ -1,0 +1,33 @@
+.container {
+    width: 97%;
+    height: 1500px;
+    margin: 1.5%;
+    /*border: 0px solid black;*/
+    background: #f1f1f1;
+}
+.company{
+    direction: rtl;
+    /*margin-top: -150px;*/
+}
+
+.company img{
+    width: 100%;
+}
+
+h1{
+    text-decoration: underline;
+}
+.data-table table, th, td {
+    border-collapse: collapse;
+    /* border: 1px solid; */
+    direction: rtl;
+    /* width: 1200px; */
+    font-size: 20px;
+}
+table, th, td {
+    /* width: 1000px; */
+    border-collapse: collapse;
+    border: 1px solid;
+    direction: rtl;
+    font-size: 20px;
+}

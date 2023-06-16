@@ -1,0 +1,1 @@
+import{aB as a,r as e}from"./index.40c6202a.js";const n=a("survey",()=>{const r=e(!1),s=e([]),t=e([]),u=e();function o(){r.value=!1,s.value=[],t.value=[]}return{isLoadSurveys:r,allSurveyItems:s,surveyItems:t,surveyError:u,getSurveyItemStarted:o}});export{n as u};

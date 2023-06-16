@@ -1,0 +1,20 @@
+{
+    "FormName": "Sample Form",
+    "Description": "This is a description of the sample form",
+    "Questions": [
+        {
+           "Question": "What's your name?",
+            "QuestionType": 1,
+            "Answers": []
+        } ,
+        {
+            "Question": "Single or Married?",
+            "QuestionType": "4", 
+            "Answers": [
+                "Single",
+                "Married",
+                "Prefer not to say"
+            ]
+        }
+    ]
+}
